@@ -1,4 +1,5 @@
 import * as Device from 'expo-device';
+import { Link } from "expo-router";
 import { Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -36,7 +37,8 @@ export default function HomeScreen() {
           <AnimatedIcon />
           <ThemedText type="title" style={styles.title}>
             Welcome to&nbsp;Mylis
-          </ThemedText>
+            </ThemedText>
+            <Link href="/bible" style={{ color: "#0a7ea4", fontSize: 18, marginTop: 10 }}>Open the Bible</Link>
         </ThemedView>
 
         <ThemedText type="code" style={styles.code}>
