@@ -25,7 +25,7 @@ const ref = ONE_CHAPTER[book] ? `${book}%201:1-${ONE_CHAPTER[book]}` : `${book}%
         {book} {chapter} (KJV)
       </Text>
       <Text onPress={() => { if (chapter > 1) setChapter(chapter - 1); }} style={{ color: "#0a7ea4", fontSize: 18 }}>{"<"} Previous Chapter</Text>
-      <Text onPress={() => { const max = BOOKS.find((b) => b.name === book)?.chapters ?? 1; if (chapter < max) setChapter(chapter + 1); }} style={{ color: "#0a7ea4", fontSize: 18 }}> Next Chapter {">"}</Text>
+      <Text onPress={() => { const i = BOOKS.findIndex((b) => b.name === book); if (chapter < BOOKS[i].chapters) setChapter(chapter + 1); else if (i < BOOKS.length - 1) { setBook(BOOKS[i + 1].name); setChapter(1); } }} style={{ color: "#0a7ea4", fontSize: 18 }}> Next Chapter {">"}</Text>
       {showBooks && BOOKS.map((b) => (
         <Text key={b.name} onPress={() => { setBook(b.name); setChapter(1); setShowBooks(false); }} style={{ fontSize: 18, paddingVertical: 6 }}>
           {b.name}
