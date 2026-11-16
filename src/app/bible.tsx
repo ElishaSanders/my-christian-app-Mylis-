@@ -9,8 +9,9 @@ export default function BibleScreen() {
   const [chapter, setChapter] = useState(3);
   const [showBooks, setShowBooks] = useState(false);
 
-  useEffect(() => {
-    fetch(`https://bible-api.com/${book}%20${chapter}?translation=kjv`)
+  useEffect(() => {const ONE_CHAPTER: Record<string, number> = { Obadiah: 21, Philemon: 25, "2 John": 13, "3 John": 14, Jude: 25 };
+const ref = ONE_CHAPTER[book] ? `${book}%201:1-${ONE_CHAPTER[book]}` : `${book}%20${chapter}`;
+    fetch(`https://bible-api.com/${ref}?translation=kjv`)
       .then((res) => res.json())
       .then((data) => setVerses(data.verses))
       .finally(() => setLoading(false));
@@ -23,8 +24,8 @@ export default function BibleScreen() {
       <Text onPress={() => setShowBooks(!showBooks)} style={{ fontSize: 24, fontWeight: "bold", marginBottom: 16 }}>
         {book} {chapter} (KJV)
       </Text>
-      <Text onPress={() => setChapter(chapter - 1)} style={{ color: "#0a7ea4", fontSize: 18 }}>{"<"} Previous Chapter</Text>
-      <Text onPress={() => setChapter(chapter + 1)} style={{ color: "#0a7ea4", fontSize: 18 }}> Next Chapter {">"}</Text>
+      <Text onPress={() => { if (chapter > 1) setChapter(chapter - 1); }} style={{ color: "#0a7ea4", fontSize: 18 }}>{"<"} Previous Chapter</Text>
+      <Text onPress={() => { const max = BOOKS.find((b) => b.name === book)?.chapters ?? 1; if (chapter < max) setChapter(chapter + 1); }} style={{ color: "#0a7ea4", fontSize: 18 }}> Next Chapter {">"}</Text>
       {showBooks && BOOKS.map((b) => (
         <Text key={b.name} onPress={() => { setBook(b.name); setChapter(1); setShowBooks(false); }} style={{ fontSize: 18, paddingVertical: 6 }}>
           {b.name}
