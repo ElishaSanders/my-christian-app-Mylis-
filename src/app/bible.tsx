@@ -1,5 +1,6 @@
 import { BOOKS } from "@/components/books";
 import kjvData from "@/components/kjv.json";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 const KJV = kjvData as Record<string, { t: string; i?: boolean; r?: boolean }[][][]>;
@@ -15,6 +16,21 @@ export default function BibleScreen() {
   const [pickVerse, setPickVerse] = useState(false);
   const scrollRef = useRef<any>(null);
   const spots = useRef<Record<number, number>>({});
+  const [highlights, setHighlights] = useState<Record<string, string>>({});
+  const [menuVerse, setMenuVerse] = useState(0);
+
+  useEffect(() => {
+    AsyncStorage.getItem("highlights").then((s) => s && setHighlights(JSON.parse(s)));
+  }, []);
+  
+  function paint(color: string) {
+    const key = `${book} ${chapter}:${menuVerse}`;
+    const next = { ...highlights };
+    if (color) next[key] = color; else delete next[key];
+    setHighlights(next);
+    AsyncStorage.setItem("highlights", JSON.stringify(next));
+    setMenuVerse(0);
+  }
 
   useEffect(() => {
   const ch = KJV[book]?.[chapter - 1] ?? [];
@@ -50,7 +66,7 @@ export default function BibleScreen() {
   </View>
 ))}
       {verses.map((v) => (
-        <Text key={v.verse} onLayout={(e) => (spots.current[v.verse] = e.nativeEvent.layout.y)} style={{ fontSize: 17, lineHeight: 26, marginBottom: 6, opacity: verse && v.verse !== verse ? 0.3 : 1 }}>
+        <Text key={v.verse} onLongPress={() => setMenuVerse(v.verse)} onLayout={(e) => (spots.current[v.verse] = e.nativeEvent.layout.y)} style={{ fontSize: 17, backgroundColor: highlights[`${book} ${chapter}:${v.verse}`], lineHeight: 26, marginBottom: 6, opacity: verse && v.verse !== verse ? 0.3 : 1 }}>
           <Text style={{ fontWeight: "bold" }}>{v.verse} </Text>
         {v.parts.map((p: any, k: number) => (
   <Text key={k} style={{ fontStyle: p.i ? "italic" : "normal", color: p.r ? "#c00" : undefined }}>
@@ -60,6 +76,14 @@ export default function BibleScreen() {
         </Text>
       ))}
           </ScrollView>
+          {menuVerse > 0 && (
+  <View style={{ position: "absolute", bottom: 85, left: 16, right: 16, flexDirection: "row", justifyContent: "space-around", alignItems: "center", backgroundColor: "#fff", borderRadius: 30, padding: 12, elevation: 5 }}>
+    {["#fff59d", "#a5d6a7", "#90caf9", "#f48fb1", "#ffcc80"].map((c) => (
+      <Text key={c} onPress={() => paint(c)} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: c }} />
+    ))}
+    <Text onPress={() => paint("")} style={{ fontSize: 24 }}>✕</Text>
+  </View>
+)}
     {!showBooks && (
       <View style={{ position: "absolute", bottom: 15, left: 16, right: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "#eee", borderRadius: 30, paddingHorizontal: 20, paddingVertical: 12 }}>
         <Text
