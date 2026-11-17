@@ -1,9 +1,13 @@
 import { BOOKS } from "@/components/books";
+import kjvStrongs from "@/components/kjv-strongs.json";
 import kjvData from "@/components/kjv.json";
+import dictData from "@/components/strongs-dict.json";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 const KJV = kjvData as Record<string, { t: string; i?: boolean; r?: boolean }[][][]>;
+const STRONGS = kjvStrongs as Record<string, { t: string; i?: boolean; r? :boolean; s?: string }[][][]>;
+const DICT = dictData as Record<string, { w: string; x: string; p?: string; d?: string; k?: string }>;
 
 export default function BibleScreen() {
   const [verses, setVerses] = useState<any[]>([]);
@@ -18,6 +22,8 @@ export default function BibleScreen() {
   const spots = useRef<Record<number, number>>({});
   const [highlights, setHighlights] = useState<Record<string, string>>({});
   const [menuVerse, setMenuVerse] = useState(0);
+  const [strongs, setStrongs] = useState(false);
+  const [word, setWord] = useState("");
 
   useEffect(() => {
     AsyncStorage.getItem("highlights").then((s) => s && setHighlights(JSON.parse(s)));
@@ -33,18 +39,21 @@ export default function BibleScreen() {
   }
 
   useEffect(() => {
-  const ch = KJV[book]?.[chapter - 1] ?? [];
+  const ch = (strongs ? STRONGS : KJV)[book]?.[chapter - 1] ?? [];
   setVerses(ch.map((parts, i) => ({ verse: i + 1, parts })));
   scrollRef.current?.scrollTo({ y: 0 }); setLoading(false);
-}, [book, chapter]);
+}, [book, chapter, strongs]);
 
   if (loading) return <ActivityIndicator style={{ marginTop: 50 }} />;
 
   return ( <View style={{ flex: 1 }}>
     <ScrollView ref={scrollRef} onScrollBeginDrag={() => setVerse(0)} style={{ padding: 16, paddingBottom: 100, backgroundColor: "#fff" }} contentContainerStyle={{ paddingTop: 50, paddingBottom: 100 }}>
-      <Text onPress={() => setShowBooks(!showBooks)} style={{ fontSize: 24, fontWeight: "bold", marginBottom: 16 }}>
-        {book} {chapter} (KJV)
-      </Text>
+      <Text onPress={() => setShowBooks(!showBooks)} style={{ fontSize: 24, fontWeight: "bold", marginBottom: 8 }}>
+  {book} {chapter} (KJV)
+</Text>
+      <Text onPress={() => setStrongs(!strongs)} style={{ color: "#2a7", marginBottom: 8 }}>
+  {strongs ? "Hide Strong's" : "Show Strong's"}
+</Text>
       
       {pickVerse && (
   <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 12 }}>
@@ -70,12 +79,24 @@ export default function BibleScreen() {
           <Text style={{ fontWeight: "bold" }}>{v.verse} </Text>
         {v.parts.map((p: any, k: number) => (
   <Text key={k} style={{ fontStyle: p.i ? "italic" : "normal", color: p.r ? "#c00" : undefined }}>
-    {p.t}
+    {p.t}{strongs && p.s ? <Text onPress={() => setWord(p.s)} style={{ fontSize: 9, color: "#2a7", textAlignVertical: "top" }}> {p.s[0]}{+p.s.slice(1)}</Text> : null}
   </Text>
 ))}
         </Text>
       ))}
           </ScrollView>
+          {word !== "" && DICT[word] && (
+  <View style={{ position: "absolute", top: 80, left: 16, right: 16, backgroundColor: "#fff", borderRadius: 16, padding: 16, elevation: 8 }}>
+    <Text style={{ fontSize: 14, color: "#2a7" }}>{word[0]}{+word.slice(1)}</Text>
+    <Text style={{ fontSize: 28 }}>{DICT[word].w}</Text>
+    <Text style={{ fontSize: 16, fontStyle: "italic", marginBottom: 8 }}>
+      {DICT[word].x}{DICT[word].p ? ` (${DICT[word].p})` : ""}
+    </Text>
+    {DICT[word].d && <Text style={{ fontSize: 15, marginBottom: 8 }}>{DICT[word].d}</Text>}
+    {DICT[word].k && <Text style={{ fontSize: 14, color: "#555" }}>KJV: {DICT[word].k}</Text>}
+    <Text onPress={() => setWord("")} style={{ position: "absolute", top: 6, right: 8, fontSize: 22, padding: 8, zIndex: 10 }}>✕</Text>
+  </View>
+)}
           {menuVerse > 0 && (
   <View style={{ position: "absolute", bottom: 85, left: 16, right: 16, flexDirection: "row", justifyContent: "space-around", alignItems: "center", backgroundColor: "#fff", borderRadius: 30, padding: 12, elevation: 5 }}>
     {["#fff59d", "#a5d6a7", "#90caf9", "#f48fb1", "#ffcc80"].map((c) => (
