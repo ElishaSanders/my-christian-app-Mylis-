@@ -19,18 +19,17 @@ export default function BibleScreen() {
   useEffect(() => {
   const ch = KJV[book]?.[chapter - 1] ?? [];
   setVerses(ch.map((parts, i) => ({ verse: i + 1, parts })));
-  setLoading(false);
+  scrollRef.current?.scrollTo({ y: 0 }); setLoading(false);
 }, [book, chapter]);
 
   if (loading) return <ActivityIndicator style={{ marginTop: 50 }} />;
 
-  return (
-    <ScrollView ref={scrollRef} onScrollBeginDrag={() => setVerse(0)} style={{ padding: 16, backgroundColor: "#fff" }} contentContainerStyle={{ paddingTop: 50, paddingBottom: 100 }}>
+  return ( <View style={{ flex: 1 }}>
+    <ScrollView ref={scrollRef} onScrollBeginDrag={() => setVerse(0)} style={{ padding: 16, paddingBottom: 100, backgroundColor: "#fff" }} contentContainerStyle={{ paddingTop: 50, paddingBottom: 100 }}>
       <Text onPress={() => setShowBooks(!showBooks)} style={{ fontSize: 24, fontWeight: "bold", marginBottom: 16 }}>
         {book} {chapter} (KJV)
       </Text>
-      <Text onPress={() => { const i = BOOKS.findIndex((b) => b.name === book); if (chapter > 1) setChapter(chapter - 1); else if (i > 0) { setBook(BOOKS[i - 1].name); setChapter(BOOKS[i - 1].chapters); } }} style={{ color: "#0a7ea4", fontSize: 18 }}>{"<"} Previous Chapter</Text>
-      <Text onPress={() => { const i = BOOKS.findIndex((b) => b.name === book); if (chapter < BOOKS[i].chapters) setChapter(chapter + 1); else if (i < BOOKS.length - 1) { setBook(BOOKS[i + 1].name); setChapter(1); } }} style={{ color: "#0a7ea4", fontSize: 18 }}> Next Chapter {">"}</Text>
+      
       {pickVerse && (
   <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 12 }}>
     {verses.map((v) => (
@@ -60,6 +59,20 @@ export default function BibleScreen() {
 ))}
         </Text>
       ))}
-    </ScrollView>
-  );
+          </ScrollView>
+    {!showBooks && (
+      <View style={{ position: "absolute", bottom: 15, left: 16, right: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "#eee", borderRadius: 30, paddingHorizontal: 20, paddingVertical: 12 }}>
+        <Text
+          onPress={() => { const i = BOOKS.findIndex((b) => b.name === book); if (chapter > 1) setChapter(chapter - 1); else if (i > 0) { setBook(BOOKS[i - 1].name); setChapter(BOOKS[i - 1].chapters); } }}
+          style={{ fontSize: 28 }}
+        >‹</Text>
+        <Text style={{ fontSize: 18, fontWeight: "bold" }}>{book} {chapter}</Text>
+        <Text
+          onPress={() => { const i = BOOKS.findIndex((b) => b.name === book); if (chapter < BOOKS[i].chapters) setChapter(chapter + 1); else if (i < BOOKS.length - 1) { setBook(BOOKS[i + 1].name); setChapter(1); } }}
+          style={{ fontSize: 28 }}
+        >›</Text>
+      </View>
+    )}
+  </View>
+);
 }
