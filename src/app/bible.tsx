@@ -1,6 +1,8 @@
 import { BOOKS } from "@/components/books";
+import kjvData from "@/components/kjv.json";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+const KJV = kjvData as Record<string, { t: string; i?: boolean; r?: boolean }[][][]>;
 
 export default function BibleScreen() {
   const [verses, setVerses] = useState<any[]>([]);
@@ -14,13 +16,11 @@ export default function BibleScreen() {
   const scrollRef = useRef<any>(null);
   const spots = useRef<Record<number, number>>({});
 
-  useEffect(() => {const ONE_CHAPTER: Record<string, number> = { Obadiah: 21, Philemon: 25, "2 John": 13, "3 John": 14, Jude: 25 };
-const ref = ONE_CHAPTER[book] ? `${book}%201:1-${ONE_CHAPTER[book]}` : `${book}%20${chapter}`;
-    fetch(`https://bible-api.com/${ref}?translation=kjv`)
-      .then((res) => res.json())
-      .then((data) => setVerses(data.verses))
-      .finally(() => setLoading(false));
-  }, [book, chapter]);
+  useEffect(() => {
+  const ch = KJV[book]?.[chapter - 1] ?? [];
+  setVerses(ch.map((parts, i) => ({ verse: i + 1, parts })));
+  setLoading(false);
+}, [book, chapter]);
 
   if (loading) return <ActivityIndicator style={{ marginTop: 50 }} />;
 
@@ -53,7 +53,11 @@ const ref = ONE_CHAPTER[book] ? `${book}%201:1-${ONE_CHAPTER[book]}` : `${book}%
       {verses.map((v) => (
         <Text key={v.verse} onLayout={(e) => (spots.current[v.verse] = e.nativeEvent.layout.y)} style={{ fontSize: 17, lineHeight: 26, marginBottom: 6, opacity: verse && v.verse !== verse ? 0.3 : 1 }}>
           <Text style={{ fontWeight: "bold" }}>{v.verse} </Text>
-          {v.text.replace(/\n/g, " ").trim()}
+        {v.parts.map((p: any, k: number) => (
+  <Text key={k} style={{ fontStyle: p.i ? "italic" : "normal", color: p.r ? "#c00" : undefined }}>
+    {p.t}
+  </Text>
+))}
         </Text>
       ))}
     </ScrollView>
